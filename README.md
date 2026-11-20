@@ -32,7 +32,7 @@ nutrition_api/
     │   ├── food.csv
     │   ├── food_nutrient.csv
     │   └── nutrient.csv
-    └── mon_bo_sung_per100g.csv  # Optional supplementary food data
+    └── additional_food.csv 
 ```
 
 ## 1. Data Setup
