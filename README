@@ -1,0 +1,137 @@
+# Nutrition Lookup API
+
+A FastAPI-based REST API service designed to search and calculate food nutritional values. The system combines the USDA SR Legacy dataset with supplementary local food items, using RapidFuzz for fuzzy string matching.
+
+## Directory Structure
+
+Ensure your project folder is organized as follows before starting:
+
+```
+nutrition_api/
+├── main.py                     # Main application code and logic
+├── requirements.txt            # Python dependencies
+├── README.md                   # Project documentation
+└── data/
+    ├── usda_sr_legacy/         # USDA dataset directory
+    │   ├── food.csv
+    │   ├── food_nutrient.csv
+    │   └── nutrient.csv
+    └── mon_bo_sung_per100g.csv # Supplementary Vietnamese food items (optional)
+```
+
+## System Requirements
+
+* **Python**: Version 3.9 or higher.
+* **Memory**: At least 1–2 GB of available RAM (needed to load the dataset into memory).
+
+## 1. Data Setup
+
+The API requires CSV files containing nutritional data. Follow these steps to prepare the dataset:
+
+1. **Download the USDA SR Legacy dataset**:
+   * Direct download link: [FoodData Central SR Legacy CSV](https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip)
+   * Extract the downloaded ZIP archive.
+
+2. **Move dataset files to the target directory**:
+   * Locate `food.csv`, `food_nutrient.csv`, and `nutrient.csv` from the extracted folder.
+   * Place all 3 files into `data/usda_sr_legacy/`.
+
+3. **Supplementary data (Optional)**:
+   * Place `mon_bo_sung_per100g.csv` inside the `data/` directory if available.
+
+## 2. Environment & Dependency Setup
+
+Open a terminal in the root directory of the project (`nutrition_api`):
+
+### Step 2.1: Create & Activate a Virtual Environment
+
+* **On Windows (PowerShell)**:
+  ```powershell
+  python -m venv venv
+  .\venv\Scripts\activate
+  ```
+
+* **On macOS / Linux**:
+  ```bash
+  python3 -m venv venv
+  source venv/bin/activate
+  ```
+
+### Step 2.2: Install Dependencies
+
+Using `python -m pip` ensures dependencies are installed directly into your active virtual environment:
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+## 3. Running the Server
+
+Start the API server using Uvicorn in development mode. Executing via `python -m uvicorn` avoids executable PATH issues on Windows PowerShell:
+
+```bash
+python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+* Once startup completes, the terminal will display `Application startup complete.`
+* The server will be listening at `http://localhost:8000`.
+
+## 4. Testing & API Documentation (Swagger UI)
+
+FastAPI automatically generates interactive API documentation.
+
+1. Open your browser and navigate to: `http://localhost:8000/docs`
+2. Expand the `GET /api/v1/nutrition` endpoint and click **Try it out**.
+3. Input sample parameters:
+   * `food_name`: `trứng gà` or `cơm tấm`
+   * `serving_g`: `100`
+4. Click **Execute** to view the JSON response.
+
+## 5. Endpoint Specifications (For Backend Integration)
+
+### `GET /api/v1/nutrition`
+
+Retrieve nutritional facts for a given food item.
+
+#### Query Parameters:
+
+| Parameter | Type | Required | Default | Description |
+| ----- | ----- | ----- | ----- | ----- |
+| `food_name` | `string` | Yes | - | Food or ingredient name (e.g., `thịt gà`, `banana`, `cơm tấm`) |
+| `serving_g` | `float` | No | `100.0` | Portion weight in grams (must be $> 0$) |
+| `min_score` | `integer` | No | `75` | Minimum fuzzy matching similarity threshold ($0 - 100$) |
+
+#### Sample Response (`200 OK`):
+
+```json
+{
+  "input_name": "trung ga",
+  "search_query": "Egg, whole, cooked",
+  "matched_description": "Egg, whole, cooked",
+  "similarity_score": 100.0,
+  "serving_g": 100.0,
+  "nutrients": [
+    {
+      "name": "Calories",
+      "amount": 155.0,
+      "unit": "kcal"
+    },
+    {
+      "name": "Protein",
+      "amount": 12.58,
+      "unit": "g"
+    },
+    {
+      "name": "Total Fat",
+      "amount": 10.61,
+      "unit": "g"
+    }
+  ]
+}
+```
+
+#### Common HTTP Status Codes:
+
+* `404 Not Found`: No food item matched above the `min_score` threshold.
+* `422 Unprocessable Entity`: The query matches a complex mixed dish without standardized formula data.
