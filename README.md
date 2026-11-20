@@ -59,7 +59,7 @@ data/usda_sr_legacy/
 
 ### Add supplementary data (optional)
 
-If available, place `mon_bo_sung_per100g.csv` in the `data/` directory.
+If available, place `additional_food.csv` in the `data/` directory.
 
 ## 2. Environment and Dependencies
 
